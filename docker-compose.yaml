@@ -1,0 +1,64 @@
+﻿version: "3"
+
+services:
+  
+  epm:
+    image: socialite/engineers-worldwide
+    build: .
+    hostname: epm
+    container_name: epm
+    restart: "no"
+    depends_on:
+      - epm-db
+    ports:
+      - "80:80"
+      - "443:443"
+    environment: # if we dont need/want https support, you can comment all of these lines
+      - ASPNETCORE_URLS=https://+;http://+
+      #- Kestrel__Certificates__Default__Path=/app/Certs/cert.pem  
+      #- Kestrel__Certificates__Default__KeyPath=/app/Certs/key.pem
+    volumes:
+      - ./appsettings.docker.json:/app/appsettings.json # example of mapping appsettings.json to inside of the container    
+      #- ./Certs/cert.pem:/app/Certs/cert.pem #map the certificates and priv key to inside of the container
+      #- ./Certs/key.pem:/app/Certs/key.pem
+    logging:
+      options:
+        max-size: 50m
+  
+  epm-db:
+    image: mysql:8
+    hostname: epm-db
+    container_name: epm-db
+    restart: always
+    expose:
+      - "3306"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysql
+    logging:
+      options:
+        max-size: 50m
+  
+  #mail server but its not working yet
+  mail-server:
+    image: bytemark/smtp
+    hostname: mail-server
+    container_name: mail-server
+    restart: always
+    ports:
+      - "587:25"
+    environment:
+      RELAY_HOST: smtp.example.com
+      RELAY_PORT: 587
+      RELAY_USERNAME: noreply@ordemengenheiros.pt
+      RELAY_PASSWORD: secretpassword
+    logging:
+      options:
+        max-size: 50m
+
+
+volumes:
+  mysql_db: { }  # logical volume to persist data between runs
